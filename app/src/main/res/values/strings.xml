@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">PDDL Playground for Pepper</string>
+    <string name="loading">Loading…</string>
+    <string name="connecting">Syncing with my body…</string>
+    <string name="welcome">Welcome</string>
+    <string name="retry_in_x_s">Retrying in %.1f s…</string>
+    <string name="remote_error">Remote service error (missing planner service?)</string>
+    <string name="focus_refused">I am not ready yet</string>
 </resources>

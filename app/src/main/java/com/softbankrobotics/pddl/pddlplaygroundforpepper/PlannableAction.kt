@@ -6,6 +6,8 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.DisposablesSuspe
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Observable
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Signal
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.withDisposablesSuspend
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldChange
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
 import com.softbankrobotics.pddlplanning.Instance
 import com.softbankrobotics.pddlplanning.utils.Named
 import kotlinx.coroutines.CancellationException
@@ -51,10 +53,45 @@ abstract class PlannableAction(val pddl: PDDLAction, val view: View? = null) : N
             Timber.d("Action \"${name}\" is cancelled.")
             throw e
         } catch (e: Throwable) {
-            Timber.d(e, "Action \"${name}\" ended with error: ${e}")
+            Timber.d(e, "Action \"${name}\" ended with error: $e")
             throw e
         }
     }
+
+    /**
+     * Runs an action in an usual context with a frame layout to support the view.
+     */
+    suspend fun runWithOnStarted(
+        args: Array<out Instance> = arrayOf(),
+        onStarted: () -> Unit = {}
+    ): WorldChange =
+        runCustom(args, { sameArgs -> runSuspend(*sameArgs) }, onStarted)
+
+    /**
+     * Runs an action in an usual context with a frame layout to support the view.
+     */
+    suspend fun runCustom(
+        args: Array<out Instance> = arrayOf(),
+        runFunction: suspend (Array<out Instance>) -> WorldChange,
+        onStarted: () -> Unit = {}
+    ): WorldChange {
+        val startedSubscription = started.subscribe { onStarted() }
+        return try {
+            runFunction(args)
+        } finally {
+            startedSubscription.dispose()
+        }
+    }
+
+    /**
+     * Runs an action in an usual context with a frame layout to support the view.
+     */
+    suspend fun runActionWithOnStartedAndDebugLogs(
+        args: Array<out Instance> = arrayOf(),
+        onStarted: () -> Unit = {}
+    ): WorldChange =
+        runCustom(args, { sameArgs -> runWithDebugLogs(*sameArgs) }, onStarted)
+
 
     companion object {
 

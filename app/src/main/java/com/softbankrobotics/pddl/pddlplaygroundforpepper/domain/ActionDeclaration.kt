@@ -1,8 +1,10 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 
 import android.content.Context
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.PlannableAction
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.createTopicFromResource
 import com.softbankrobotics.pddlplanning.Action
 import com.softbankrobotics.pddlplanning.utils.Named
 import java.util.*
@@ -44,7 +46,7 @@ abstract class ActionDeclaration: Named {
     abstract val keepHumanInMemory: Boolean
 
     /**
-     * Derivates the given action declaration with the given factory.
+     * Derives the given action declaration with the given factory.
      * Useful to specify the factory later, only if required.
      */
     fun withCreateAction(factory: ((ActionDeclaration) -> PlannableAction)?): ActionDeclaration {
@@ -79,7 +81,7 @@ abstract class ActionDeclaration: Named {
     }
 
     /**
-     * Derivates the given action declaration with the given PDDL.
+     * Derives the given action declaration with the given PDDL.
      * Useful to adapt the PDDL to a configuration.
      */
     fun withPDDL(newPddl: Action): ActionDeclaration {
@@ -99,14 +101,14 @@ abstract class ActionDeclaration: Named {
 /**
  * Returns a topic factory suitable for action declarations from a resource.
  */
-fun topicFactoryWithoutDynamicConcept(resource: Int): (QiContext, Context) -> Pair<List<Topic>, List<String>> {
+suspend fun topicFactoryWithoutDynamicConcept(resource: Int): suspend (QiContext, Context) -> Pair<List<Topic>, List<String>> {
     return topicFactoryWithoutDynamicConcept(listOf(resource))
 }
 
 /**
  * Returns a topic factory suitable for action declarations from multiple resources.
  */
-fun topicFactoryWithoutDynamicConcept(resources: List<Int>): (QiContext, Context) -> Pair<List<Topic>, List<String>> {
+suspend fun topicFactoryWithoutDynamicConcept(resources: List<Int>): suspend (QiContext, Context) -> Pair<List<Topic>, List<String>> {
     return { qiContext: QiContext, context: Context ->
         Pair(resources.map { createTopicFromResource(context, qiContext, it) }, listOf())
     }

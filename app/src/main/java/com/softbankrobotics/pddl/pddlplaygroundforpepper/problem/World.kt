@@ -1,8 +1,7 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.problem
 
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.MutableObservablePropertyBase
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.ObservableProperty
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.StoredProperty
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.extractObjects
 import com.softbankrobotics.pddlplanning.Fact
 import com.softbankrobotics.pddlplanning.Instance
 import com.softbankrobotics.pddlplanning.negationOf
@@ -128,6 +127,11 @@ data class WorldChange(
         }
     }
 }
+
+/**
+ * Sometimes it is convenient to defer world changes as functions.
+ */
+typealias WorldChangeFunction = (WorldState) -> WorldChange
 
 /**
  * A mutable state of the world.

@@ -6,11 +6,19 @@ import com.softbankrobotics.pddlplanning.utils.indexOf
 
 val self = AgentivePhysicalObject("self")
 
-/**
- * All the well-known constants.
+/*
+ * Emotions
  */
-val constantIndex: Index<Instance> by lazy {
+val happy = Emotion("happy")
+val neutral = Emotion("neutral")
+val sad = Emotion("sad")
+
+/**
+ * The index of all declared constants.
+ */
+val constantsIndex: Index<Instance> by lazy {
     indexOf(
-        self
+        self,
+        happy, neutral, sad
     )
 }

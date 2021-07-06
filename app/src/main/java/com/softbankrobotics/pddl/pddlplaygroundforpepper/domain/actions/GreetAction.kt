@@ -6,10 +6,8 @@ import com.aldebaran.qi.sdk.`object`.conversation.QiChatbot
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.addTo
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.Human
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.engages
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.self
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.was_greeted
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
 import com.softbankrobotics.pddlplanning.Action
 import com.softbankrobotics.pddlplanning.and
 import java.util.*

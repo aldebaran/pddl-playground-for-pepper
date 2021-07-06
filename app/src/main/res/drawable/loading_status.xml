@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <item
+        android:id="@android:id/secondaryProgress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <shape
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:innerRadiusRatio="10"
+            android:shape="ring"
+            android:thicknessRatio="20.0">
+            <gradient
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:centerColor="#999999"
+                android:endColor="#999999"
+                android:startColor="#999999"
+                android:type="sweep" />
+        </shape>
+    </item>
+
+    <item
+        android:id="@android:id/progress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <rotate
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fromDegrees="270"
+            android:pivotX="50%"
+            android:pivotY="50%"
+            android:toDegrees="270">
+            <shape
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:innerRadiusRatio="10"
+                android:shape="ring"
+                android:thicknessRatio="20.0">
+                <gradient
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:centerColor="@color/design_default_color_primary"
+                    android:endColor="@color/design_default_color_primary"
+                    android:startColor="@color/design_default_color_primary"
+                    android:type="sweep" />
+
+            </shape>
+        </rotate>
+    </item>
+</layer-list>

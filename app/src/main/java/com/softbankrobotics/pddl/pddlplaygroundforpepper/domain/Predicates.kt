@@ -16,6 +16,10 @@ const val IS_DISENGAGING = "is_disengaging"
 //
 // Human/Robot interaction facts.
 //
+/** The agent knows a path from a place/object to another. */
+fun knows_path(a: AgentivePhysicalObject, from: PhysicalObject, to: PhysicalObject) =
+    Expression("knows_path", a, from, to)
+
 /** Declares that the human is interested. */
 fun is_interested(h: Human) = Expression("is_interested", h)
 
@@ -39,10 +43,17 @@ fun was_greeted(h: Human) = Expression("was_greeted", h)
 fun engages(engager: AgentivePhysicalObject, engagee: AgentivePhysicalObject) =
     Expression(ENGAGES_PREDICATE, engager, engagee)
 
-val predicateIndex: Index<Expression> by lazy {
+/** Associates an emotional state to a human. */
+fun feels(h: Human, e: Emotion) = Expression("feels", h, e)
+
+/**
+ * The index of all declared predicates.
+ */
+val predicatesIndex: Index<Expression> by lazy {
     val a1 = AgentivePhysicalObject("?a1")
     val a2 = AgentivePhysicalObject("?a2")
     val h = Human("?h")
+    val e = Emotion("?e")
 
     indexOf(
         { it.word },
@@ -50,7 +61,8 @@ val predicateIndex: Index<Expression> by lazy {
         is_disengaging(h),
         can_be_engaged(h),
         preferred_to_be_engaged(h),
+        was_greeted(h),
         engages(a1, a2),
-        was_greeted(h)
+        feels(h, e)
     )
 }

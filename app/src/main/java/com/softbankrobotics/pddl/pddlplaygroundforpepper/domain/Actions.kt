@@ -1,21 +1,22 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 
-import android.content.Context
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.QiChatbot
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.ActionDeclaration
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.MutableWorld
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.PlannableAction
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.WorldData
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.GreetAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.PlaceholderAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.StartEngageAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.StopEngageAction
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.MutableWorld
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldData
 import com.softbankrobotics.pddlplanning.utils.indexOf
 import timber.log.Timber
 
-val actionIndex = indexOf(
+/**
+ * The index of all declared actions.
+ */
+val actionsIndex = indexOf(
     GreetAction,
     StartEngageAction,
     StopEngageAction

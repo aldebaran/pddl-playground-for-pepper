@@ -1,52 +1,27 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper
 
-import android.accounts.NetworkErrorException
 import android.os.Bundle
 import android.os.RemoteException
-import android.preference.PreferenceManager
 import android.view.MotionEvent
-import android.view.View
 import android.widget.FrameLayout
-import android.widget.Toast
-import com.aldebaran.qi.Session
-import com.aldebaran.qi.sdk.*
+import com.aldebaran.qi.sdk.QiContext
+import com.aldebaran.qi.sdk.QiSDK
+import com.aldebaran.qi.sdk.RobotLifecycleCallbacks
 import com.aldebaran.qi.sdk.design.activity.RobotActivity
 import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayStrategy
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
-import com.softbankrobotics.pddlsandbox.WotanApplication.Companion.PLANNING_HISTORIES_METADATA_PREFERENCE_KEY
-import com.softbankrobotics.pddlsandbox.WotanApplication.Companion.jacksonObjectMapper
-import com.softbankrobotics.pddlsandbox.WotanApplication.Companion.managementController
-import com.softbankrobotics.pddlsandbox.WotanApplication.Companion.privateSession
-import com.softbankrobotics.pddlsandbox.common.SettingsException
-import com.softbankrobotics.pddlsandbox.planning.listStores
-import com.softbankrobotics.pddlsandbox.server.ReportInfo
-import com.softbankrobotics.pddlsandbox.utils.*
-import kotlinx.android.synthetic.main.overlay_feedback_button.view.*
-import kotlinx.android.synthetic.main.retry_countdown.view.*
-import kotlinx.android.synthetic.main.view_loading.view.*
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.RetryCountdownBinding
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.ViewLoadingBinding
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import timber.log.Timber
-import java.io.File
-import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.coroutines.CoroutineContext
 import android.content.Intent as AndroidIntent
 
 
-class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
+class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
 
-    /**
-     * Supervisor job to allow its children to fail independently of each other
-     */
-    private val job = SupervisorJob()
-
-    /**
-     * Scope the coroutine to the activity lifecycle
-     */
-    override val coroutineContext: CoroutineContext = Dispatchers.IO + job
+    private val scope = createAsyncCoroutineScope()
 
     /**
      * Subscriptions to the world state and plan change
@@ -56,17 +31,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
     /**
      * Signal to all the screen touch events
      */
-    private val emittableTouched = Signal<Unit>()
-
-    /**
-     * Whether activity is running (between onResume and onPause).
-     */
-    private val activityRunning = AtomicBoolean(false)
-
-    /**
-     * Whether we registered to Qi SDK's callbacks.
-     */
-    private val sdkRegistered = AtomicBoolean(false)
+    private val screenTouched = Signal<Unit>()
 
     /**
      * A job for scheduling a call.
@@ -92,7 +57,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
     /**
      * A view to show in loading phases.
      * */
-    private lateinit var loadingView: View
+    private lateinit var loadingView: ViewLoadingBinding
 
     /**
      * A job for setting up and starting the controller.
@@ -110,30 +75,33 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
         setContentView(R.layout.main)
     }
 
+    /**
+     * Forwards screen touch events to the controller, via signal emission.
+     */
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            emittableTouched.emit(Unit)
+            screenTouched.emit(Unit)
         }
         return super.dispatchTouchEvent(event)
     }
 
     private fun resetViewToLoading() {
         frameLayout = findViewById(R.id.frame_layout)
-        loadingView = View.inflate(this, R.layout.view_loading, null)
-        loadingView.loading_progress_text.text = getString(R.string.loading)
-        loadingView.loading_progress_bar.progress = 0
-        switchView(loadingView, "loadingView", frameLayout)
+        loadingView = ViewLoadingBinding.inflate(layoutInflater)
+        loadingView.loadingProgressText.text = getString(R.string.loading)
+        loadingView.loadingProgressBar.progress = 0
+        switchView(loadingView.root, "loadingView", frameLayout)
     }
 
     override fun onResume() {
         super.onResume()
         resetViewToLoading()
-        loadingView.loading_progress_text.text = getString(R.string.connecting)
+        loadingView.loadingProgressText.text = getString(R.string.connecting)
     }
 
     override fun onPause() {
         super.onPause()
-        launch {
+        scope.launch {
             resetController()
         }
         runBlocking {
@@ -143,7 +111,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
 
     override fun onDestroy() {
         QiSDK.unregister(this, this)
-        job.cancel()
+        scope.cancel()
         super.onDestroy()
     }
 
@@ -156,7 +124,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
             controller.stop()
             postOnUiThread {
                 resetViewToLoading()
-                loadingView.loading_progress_text.text = getString(R.string.connecting)
+                loadingView.loadingProgressText.text = getString(R.string.connecting)
             }
         }
         controller = null
@@ -166,30 +134,31 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
     /**
      * Creates a new controller (if absent) and setup the debug view
      */
-    private suspend fun ensureController(session: Session, qiContext: QiContext): Controller =
+    private suspend fun ensureController(qiContext: QiContext): Controller =
         controllerLock.withLock {
             val currentController = controller
             if (currentController != null)
                 return currentController
 
-            val newController = Controller(qiContext)
+            val newController =
+                Controller.createController(this, frameLayout, screenTouched, qiContext)
             this.controller = newController
             return newController
         }
 
     private fun reportErrorAndScheduleCall(error: String, function: () -> Unit) {
         postOnUiThread {
-            val retryCountdown = createView(R.layout.retry_countdown, this)
-            retryCountdown.error_title.text = error
-            retryCountdown.retry_countdown.text = ""
-            switchView(retryCountdown, "error retry countdown", frameLayout)
+            val retryCountdown = RetryCountdownBinding.inflate(layoutInflater)
+            retryCountdown.errorTitle.text = error
+            retryCountdown.retryCountdown.text = ""
+            switchView(retryCountdown.root, "error retry countdown", frameLayout)
 
-            scheduledCall = async {
+            scheduledCall = scope.async {
                 var timeLeft = 12_000L // in ms
                 val delta = 100L // in ms
                 while (timeLeft > 0) {
                     postOnUiThread {
-                        retryCountdown.retry_countdown.text =
+                        retryCountdown.retryCountdown.text =
                             getString(R.string.retry_in_x_s, timeLeft.toDouble() / 1000.0)
                     }
                     delay(delta)
@@ -203,127 +172,29 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
         }
     }
 
-    /**
-     * Creates a report in the given directory
-     * 1- Creates the following files:
-     *  - $dir/wotan_logs.json
-     *  - $dir/wotan_history.tsv
-     *  - $dir/naoqi_logs.json
-     * 2- Creates a human perception on the robot head
-     * Returns the report preparation response
-     */
-    suspend fun createReportIn(destination: File?): ReportInfo {
-        val (wotanLogs, wotanHistory, naoqiLogs) = destination?.let { dir ->
-            fun <T> tryWriteJSONToExternal(
-                destination: File,
-                reportLabel: String,
-                jacksonObjectMapper: ObjectMapper,
-                collectData: () -> T
-            ): String? {
-                return try {
-                    jacksonObjectMapper.writeValue(destination, collectData())
-                    destination.path
-                } catch (e: Throwable) {
-                    Timber.e(e, "Error when collecting $reportLabel")
-                    null
-                }
-            }
-
-            val wotanLogs = tryWriteJSONToExternal(
-                File(dir, "wotan_logs.json"),
-                "app logs",
-                jacksonObjectMapper
-            ) {
-                WotanApplication.timberTree.collectLogs()
-            }
-
-            val wotanHistory = try {
-                runBlocking { controller?.savePlanningHistory() }
-                val planningHistoryStores = listStores(
-                    jacksonObjectMapper,
-                    PreferenceManager.getDefaultSharedPreferences(this),
-                    PLANNING_HISTORIES_METADATA_PREFERENCE_KEY
-                )
-                val historyDestination = File(dir, "wotan_history.tsv")
-                val output = historyDestination.outputStream().writer()
-                planningHistoryStores.forEach { store ->
-                    output.write("Time (ns) since ${store.timestamp} (ms)\tStateAndPlan\n")
-                    val input = File(store.path).inputStream().reader()
-                    input.forEachLine {
-                        output.write(it)
-                        output.write("\n")
-                    }
-                }
-                output.flush()
-                historyDestination.path
-            } catch (e: Throwable) {
-                Timber.e(e, "Error when collecting planning histories")
-                null
-            }
-
-            val naoqiLogs = tryWriteJSONToExternal(
-                File(dir, "naoqi_logs.json"),
-                "NAOqi logs",
-                jacksonObjectMapper
-            ) {
-                managementController.collectNAOqiLogs()
-            }
-            Triple(wotanLogs, wotanHistory, naoqiLogs)
-        } ?: Triple(null, null, null)
-
-        val dumpPath = dumpPerceptionBlackBox(privateSession.get())
-
-        return ReportInfo(
-            versionName = BuildConfig.VERSION_NAME,
-            versionCode = BuildConfig.VERSION_CODE,
-            githash = BuildConfig.GIT_HASH,
-            humanPerceptionBlackBoxPath = dumpPath,
-            wotanLogsFileName = wotanLogs,
-            wotanHistoryFileName = wotanHistory,
-            naoqiLogsFileName = naoqiLogs
-        )
-    }
-
     override fun onRobotFocusGained(qiContext: QiContext) {
         Timber.d("Got focus")
         stimulatingFocusIfNotReceived?.cancel()
         stimulatingFocusIfNotReceived = null
 
-        val session = privateSession.get()
-        if (session != null) {
-            ensuringController = async {
-                try {
-                    ensureController(session, qiContext).apply {
-                        Timber.d("Setting up controller")
-                        setUp()
-                        Timber.d("Starting controller")
-                        start()
-                    }
-                } catch (e: SettingsException) {
-                    Timber.w(e, "Settings issue prevented initialization")
-                    onUiThread {
-                        Toast.makeText(this@MainActivity, e.message, Toast.LENGTH_LONG).show()
-                        startActivity(
-                            AndroidIntent(this@MainActivity, MainSettingsActivity::class.java)
-                        )
-                    }
-                } catch (e: NetworkErrorException) {
-                    Timber.w(e, "Network issue prevented initialization")
-                    reportErrorAndScheduleCall(getString(R.string.network_error)) {
-                        onRobotFocusGained(qiContext)
-                    }
-                } catch (e: RemoteException) {
-                    Timber.w(e, "Remote service issue prevented initialization")
-                    reportErrorAndScheduleCall(getString(R.string.remote_error)) {
-                        onRobotFocusGained(qiContext)
-                    }
-                } catch (e: CancellationException) {
-                    Timber.w(e, "Chat and action loading was cancelled during initialization")
-                } catch (t: Throwable) {
-                    Timber.e(t, "Error at initialization")
-                    postOnUiThread {
-                        throw t // Controller is a critical component, ensure the app crashes if absent
-                    }
+        ensuringController = scope.async {
+            try {
+                Timber.d("Setting up controller")
+                ensureController(qiContext).apply {
+                    Timber.d("Starting controller")
+                    start()
+                }
+            } catch (e: RemoteException) {
+                Timber.w(e, "Remote service issue prevented initialization")
+                reportErrorAndScheduleCall(getString(R.string.remote_error)) {
+                    onRobotFocusGained(qiContext)
+                }
+            } catch (e: CancellationException) {
+                Timber.w(e, "Chat and action loading was cancelled during initialization")
+            } catch (t: Throwable) {
+                Timber.e(t, "Error at initialization")
+                postOnUiThread {
+                    throw t // Controller is a critical component, ensure the app crashes if absent
                 }
             }
         }
@@ -331,7 +202,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
 
     override fun onRobotFocusLost() {
         Timber.d("Focus lost.")
-        launch {
+        scope.launch {
             resetController()
             stimulatingFocusIfNotReceived?.cancelAndJoin()
             stimulatingFocusIfNotReceived = null
@@ -341,6 +212,13 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks, CoroutineScope {
     override fun onRobotFocusRefused(reason: String?) {
         stimulatingFocusIfNotReceived?.cancel()
         stimulatingFocusIfNotReceived = null
-        reportErrorAndScheduleCall(getString(R.string.focus_refused)) { triggerRebirth() }
+
+        // The Qi SDK might sometimes fail to take the focus at startup,
+        // or if the robot state is disabled.
+        // In that case, just restart the activity indefinitely,
+        // because there is no event-based API to track the state change.
+        reportErrorAndScheduleCall(getString(R.string.focus_refused)) {
+            startActivity(AndroidIntent.makeRestartActivityTask(this.intent?.component))
+        }
     }
 }

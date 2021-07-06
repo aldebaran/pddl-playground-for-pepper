@@ -1,4 +1,4 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.problem
 
 import com.softbankrobotics.pddlplanning.Instance
 

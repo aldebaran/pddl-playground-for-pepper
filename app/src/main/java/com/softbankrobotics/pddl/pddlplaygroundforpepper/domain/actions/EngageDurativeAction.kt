@@ -5,12 +5,15 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
 import com.aldebaran.qi.sdk.`object`.human.Human
 import com.aldebaran.qi.sdk.builder.EngageHumanBuilder
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.*
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.PlannableAction
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.cancelAndJoin
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.can_be_engaged
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.engages
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.is_disengaging
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.self
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.MutableWorld
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldData
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.getQiHuman
 import com.softbankrobotics.pddlplanning.Action
 import com.softbankrobotics.pddlplanning.and
 import com.softbankrobotics.pddlplanning.exists
@@ -69,7 +72,7 @@ object StartEngageAction : ActionDeclaration() {
         }
     }
 
-    fun createAction(
+    private fun createAction(
         actionDeclaration: ActionDeclaration,
         qiContext: QiContext,
         world: MutableWorld,
@@ -103,7 +106,7 @@ object StartEngageAction : ActionDeclaration() {
                     synchronized(this) {
                         val pddlHumans = it.objects.filterIsInstance<PDDLHuman>()
                         if (pddlHuman in pddlHumans) {
-                            val qiHuman = data.get<Human>(pddlHuman, QI_OBJECT)
+                            val qiHuman = data.getQiHuman(pddlHuman)
                             if (qiHuman != null && qiHuman != engagedHuman) {
                                 engagedHuman = qiHuman
                                 EngageDurativeAction.coroutineScope.launch {
@@ -162,7 +165,7 @@ object StopEngageAction : ActionDeclaration() {
         }
     }
 
-    fun createAction(
+    private fun createAction(
         actionDeclaration: ActionDeclaration
     ): PlannableAction {
         return PlannableAction.createSuspend(actionDeclaration.pddl, null) { _, started, args ->

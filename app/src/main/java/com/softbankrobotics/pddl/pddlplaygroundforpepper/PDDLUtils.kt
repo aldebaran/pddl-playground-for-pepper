@@ -1,12 +1,14 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper
 
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.SetDelta
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
+import com.softbankrobotics.pddlplanning.utils.evaluateExpression
 import com.softbankrobotics.pddlplanning.*
 
 /**
  * Thrown when a PDDL object with no name is encountered.
  */
-class UnnamedPDDLObjectException(message: String): Exception(message)
+class UnnamedPDDLObjectException(message: String) : Exception(message)
 
 /**
  * Parse instance from parameter expression.
@@ -202,3 +204,9 @@ fun effectToFacts(action: Action, args: Array<out Instance>): Set<Fact> {
 fun effectToFactDelta(action: Action, args: Array<out Instance>): SetDelta<Fact> {
     return expressionToFactDelta(appliedEffect(action, args))
 }
+
+/**
+ * Evaluate an expression given a state.
+ */
+fun evaluateExpression(expression: Expression, state: WorldState): Boolean =
+    evaluateExpression(expression, state.objects, state.facts)

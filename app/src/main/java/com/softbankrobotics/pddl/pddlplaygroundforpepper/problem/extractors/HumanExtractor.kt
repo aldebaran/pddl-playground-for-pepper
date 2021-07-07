@@ -48,8 +48,12 @@ class HumanExtractor(
 ) : CoroutineScope {
     override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
-    private var actionsKeepingHuman: Set<String> = setOf()
-        set(value) = worldTransaction { field = value }
+    /**
+     * Actions that, if they are part of the current plan,
+     * would prevent disengagement from leading to its disappearing.
+     */
+    var actionsKeepingHuman: Set<String> = setOf()
+        set(value) = worldTransaction { field = value } // worldTransaction locks and forces reevaluation.
 
     private val robotFrame: Future<Frame> = qiContext.actuationAsync.andThenCompose {
         it.async().robotFrame()

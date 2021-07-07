@@ -72,7 +72,7 @@ object StartEngageAction : ActionDeclaration() {
         }
     }
 
-    private fun createAction(
+    fun createAction(
         actionDeclaration: ActionDeclaration,
         qiContext: QiContext,
         world: MutableWorld,

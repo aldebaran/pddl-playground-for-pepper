@@ -188,6 +188,20 @@ class MutableWorld: MutableObservablePropertyBase<WorldState>() {
         update(WorldChange(SetDelta(), change))
     }
 
+    /**
+     * Adds a fact if not already present.
+     */
+    fun ensureFact(fact: Fact) {
+        update(WorldChange(SetDelta(), SetDelta.of(fact)))
+    }
+
+    /**
+     * Removes a fact if not already absent.
+     */
+    fun removeFact(fact: Fact) {
+        update(WorldChange(SetDelta(), SetDelta(removed = setOf(fact))))
+    }
+
     override fun get(): WorldState = synchronized(this) {
         WorldState(objects.toSet(), facts.toSet())
     }

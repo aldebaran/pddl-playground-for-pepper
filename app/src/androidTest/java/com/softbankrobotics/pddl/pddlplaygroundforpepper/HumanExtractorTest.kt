@@ -1,6 +1,5 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper
 
-import com.aldebaran.qi.sdk.*
 import com.aldebaran.qi.sdk.`object`.geometry.TransformTime
 import com.aldebaran.qi.sdk.`object`.human.EngagementIntentionState
 import com.aldebaran.qi.sdk.builder.TransformBuilder
@@ -9,8 +8,6 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Signal
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.StoredProperty
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.StartEngageAction
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.qiObjectCast
-import com.softbankrobotics.pddlplanning.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.mock.FakeEngageHuman
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.mock.QiContextMockHelper
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.mock.QiContextMockHelper.Companion.createFakeHuman
@@ -20,6 +17,8 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.HumanExtractor
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.getQiHuman
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.asAnyObject
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.qiObjectCast
+import com.softbankrobotics.pddlplanning.*
 import io.mockk.every
 import io.mockk.spyk
 import kotlinx.coroutines.Deferred
@@ -30,7 +29,6 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import timber.log.Timber
-import java.util.*
 import com.aldebaran.qi.sdk.`object`.human.Human as QiHuman
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.Human as PDDLHuman
 

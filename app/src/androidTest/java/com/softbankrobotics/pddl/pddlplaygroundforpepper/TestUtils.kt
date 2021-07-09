@@ -1,6 +1,8 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper
 
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Observable
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
+import com.softbankrobotics.pddlplanning.Expression
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.withTimeout
@@ -88,6 +90,15 @@ fun <T> assertNotIn(expected: Collection<T>, actual: Collection<T>) {
         expected.none { it in actual }
     )
 }
+
+/**
+ * Asserts that an expression is true in a given world state.
+ */
+fun assert(expression: Expression, state: WorldState) =
+    assertTrue(
+        "Expression $expression not true in state:\n$state",
+        evaluateExpression(expression, state)
+    )
 
 /**
  * Wait for a value that respects a certain predicate.

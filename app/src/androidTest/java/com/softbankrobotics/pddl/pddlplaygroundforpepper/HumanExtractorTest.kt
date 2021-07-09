@@ -50,8 +50,8 @@ class HumanExtractorTest {
         // The human is located but cannot be engaged yet.
         val state = futureState.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
         val pddlHuman = assertUniqueHuman(state, qiHuman)
-        assertIn(knows_path(self, self, pddlHuman), facts)
-        assertNotIn(can_be_engaged(pddlHuman), facts)
+        assert(knows_path(self, self, pddlHuman), state)
+        assert(not(can_be_engaged(pddlHuman)), state)
     }
 
     @Test

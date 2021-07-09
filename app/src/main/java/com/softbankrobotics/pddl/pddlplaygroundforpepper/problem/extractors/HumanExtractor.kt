@@ -778,7 +778,7 @@ class HumanExtractor(
      * Applies the pending world change.
      */
     private fun commitWorldChange(): Unit = synchronized(this) {
-        var state = world.state.get()
+        var state = world.get()
         var worldChange = WorldChange()
 
         // Note that it is possible to add pending changes within a change function.
@@ -791,7 +791,7 @@ class HumanExtractor(
                 worldChange = worldChange.mergedWith(pendingChange)
             }
         }
-        this.world.update(worldChange)
+        world.update(worldChange)
         worldChange.objects.removed.forEach {
             worldData.remove(it)
         }

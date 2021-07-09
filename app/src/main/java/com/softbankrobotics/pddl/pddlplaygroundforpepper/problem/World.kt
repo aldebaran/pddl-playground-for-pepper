@@ -148,13 +148,6 @@ class MutableWorld: MutableObservablePropertyBase<WorldState>() {
      */
     private val facts = mutableSetOf<Fact>()
 
-    private val mutableState = StoredProperty<WorldState>(WorldState())
-
-    /**
-     * Gets the current state of the world.
-     */
-    val state: ObservableProperty<WorldState> = mutableState
-
     /**
      * Updates the world according to a predetermined change.
      * Returns true if anything has effectively changed.

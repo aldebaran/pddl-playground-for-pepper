@@ -43,13 +43,12 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
 
         // Start the human extractor to see humans being acknowledged.
-        val futureWorld = world.state.waitForNextValueAsync()
+        val futureState = world.waitForNextValueAsync()
         humanExtractor.start()
 
         // The human is located but cannot be engaged yet.
-        val world = futureWorld.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val pddlHuman = assertUniqueHuman(world, qiHuman)
-        val facts = world.facts
+        val state = futureState.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
+        val pddlHuman = assertUniqueHuman(state, qiHuman)
         assertIn(knows_path(self, self, pddlHuman), facts)
         assertNotIn(can_be_engaged(pddlHuman), facts)
     }
@@ -70,7 +69,7 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
 
         // Start the human extractor to see humans being acknowledged.
-        val futureWorld = world.state.waitForNextValueAsync()
+        val futureWorld = world.waitForNextValueAsync()
         humanExtractor.start()
 
         // The human is located but cannot be engaged yet.
@@ -91,7 +90,7 @@ class HumanExtractorTest {
     fun humanAppears() = runBlocking {
 
         // Start the human extractor to see humans being acknowledged.
-        val futureWorld = world.state.waitForNextValueAsync()
+        val futureWorld = world.waitForNextValueAsync()
         humanExtractor.start()
 
         // Set a human around.
@@ -156,7 +155,7 @@ class HumanExtractorTest {
     @Test
     fun touchWhenNobodyCreatesAnEngagedHuman() = runBlocking {
         humanExtractor.start()
-        val futureState = world.state.waitForNextValueAsync()
+        val futureState = world.waitForNextValueAsync()
         touch.emit(Unit)
         val state = futureState.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
         val user = assertUniqueHuman(state.objects, null)
@@ -188,7 +187,7 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman1, qiHuman2))
 
         // Starting the extractor.
-        val initializingState = world.state.waitUntilAsync { state ->
+        val initializingState = world.waitUntilAsync { state ->
             Timber.d("World changed: $state")
             val h1 = assertUniqueHuman(state, qiHuman1)
             val h2 = assertUniqueHuman(state, qiHuman2)
@@ -201,14 +200,14 @@ class HumanExtractorTest {
         initializingState.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
         touch.emit(Unit)
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateThen = world.state.get()
+        val stateThen = world.get()
         val pddlHumans = stateThen.objects.filter { it.type == PDDLHuman.type }
         assertEquals(2, pddlHumans.size)
     }
 
     @Test
     fun alreadyEngagedHumanIsPreferred() = runBlocking {
-        val futureStateWithPreferredHuman = world.state.waitUntilAsync { world ->
+        val futureStateWithPreferredHuman = world.waitUntilAsync { world ->
             Timber.d("World changed: $world")
             world.facts.any { it.word == PREFERRED_TO_BE_ENGAGED }
         }
@@ -235,7 +234,7 @@ class HumanExtractorTest {
                 TransformTime(TransformBuilder().from2DTranslation(0.5, -0.2), 0)
         val qiHuman2 = qiObjectCast<QiHuman>(fakeHuman2)
         // Wait for human to be acknowledged.
-        val futureState = world.state.waitForNextValueAsync()
+        val futureState = world.waitForNextValueAsync()
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman1, qiHuman2))
         val state = futureState.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
 
@@ -258,7 +257,7 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
 
         // Starting the extractor.
-        val initializingState = world.state.waitUntilAsync { world ->
+        val initializingState = world.waitUntilAsync { world ->
             Timber.d("World changed:\n$world")
             world.facts.any { it.word == PREFERRED_TO_BE_ENGAGED }
         }
@@ -269,7 +268,7 @@ class HumanExtractorTest {
         // Human disappears: it's still considered for engagement.
         q.fakeHumanAwareness.humansAround.setValue(listOf())
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateThen = world.state.get()
+        val stateThen = world.get()
         assertTrue(
             evaluateExpression(
                 preferred_to_be_engaged(initialHuman),
@@ -280,7 +279,7 @@ class HumanExtractorTest {
         // Human re-appears: it is assumed to be the previous one.
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateFinally = world.state.get()
+        val stateFinally = world.get()
         assertEquals(2, stateFinally.objects.size)
         assertTrue(
             evaluateExpression(
@@ -302,7 +301,7 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
 
         // Starting the extractor.
-        val initializingState = world.state.waitUntilAsync { world ->
+        val initializingState = world.waitUntilAsync { world ->
             Timber.d("World changed: $world")
             world.facts.any { it.word == PREFERRED_TO_BE_ENGAGED }
         }
@@ -313,7 +312,7 @@ class HumanExtractorTest {
         // Human does not seem interested anymore.
         fakeHuman.engagementIntention.setValue(EngagementIntentionState.NOT_INTERESTED)
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateThen = world.state.get()
+        val stateThen = world.get()
         assertTrue(
             evaluateExpression(
                 preferred_to_be_engaged(initialHuman),
@@ -324,7 +323,7 @@ class HumanExtractorTest {
         // Human is again interested.
         fakeHuman.engagementIntention.setValue(EngagementIntentionState.INTERESTED)
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateFinally = world.state.get()
+        val stateFinally = world.get()
         assertEquals(2, stateFinally.objects.size)
         assertTrue(
             evaluateExpression(
@@ -346,7 +345,7 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
 
         // Starting the extractor.
-        val initializingState = world.state.waitUntilAsync { state ->
+        val initializingState = world.waitUntilAsync { state ->
             Timber.d("World changed: $state")
             val h = assertUniqueHuman(state, qiHuman)
             evaluateExpression(
@@ -359,7 +358,7 @@ class HumanExtractorTest {
         val initialHuman = assertUniqueHuman(initialWorld, qiHuman)
 
         // Human is disengaged, the human is renewed.
-        val duringEngage = world.state.waitUntilAsync { state ->
+        val duringEngage = world.waitUntilAsync { state ->
             Timber.d("World changed: $state")
             val h = assertUniqueHuman(state, qiHuman)
             evaluateExpression(
@@ -377,11 +376,11 @@ class HumanExtractorTest {
 
         world.removeFact(engages(self, initialHuman))
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateAfterEngage = world.state.get()
+        val stateAfterEngage = world.get()
         val newHuman = assertUniqueHuman(stateAfterEngage, qiHuman)
 
         // A touch is detected.
-        val futureState = world.state.waitForNextValueAsync()
+        val futureState = world.waitForNextValueAsync()
         touch.emit(Unit)
         val stateAfterTouch = futureState.await(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
         val finalHuman = assertUniqueHuman(stateAfterTouch, qiHuman)
@@ -431,7 +430,7 @@ class HumanExtractorTest {
         // Human disappears: after some time the user is sill here because the is a check in in the plan.
         q.fakeHumanAwareness.humansAround.setValue(listOf())
         delay(HumanExtractor.VISIBLE_TIMEOUT_MS + USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateThen = world.state.get()
+        val stateThen = world.get()
         assertTrue(stateThen.objects.any { it.type == PDDLHuman.type })
     }
 
@@ -460,13 +459,13 @@ class HumanExtractorTest {
         // Human disappears: after some time the user is confirmed to be away.
         q.fakeHumanAwareness.humansAround.setValue(listOf())
         delay(HumanExtractor.VISIBLE_TIMEOUT_MS + USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateThen = world.state.get()
+        val stateThen = world.get()
         assertTrue(stateThen.objects.none { it.type == PDDLHuman.type })
 
         // A touch is detected.
         touch.emit(Unit)
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateFinally = world.state.get()
+        val stateFinally = world.get()
         val finalHuman = findHuman(stateFinally, null)!!
 
         assertTrue(
@@ -517,11 +516,11 @@ class HumanExtractorTest {
         // This delay is necessary to ensure that the listener of humanIsDisengaging signal is set
         // before the signal is triggered.
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
-        val stateThen = world.state.get()
+        val stateThen = world.get()
         assertIn(engages(self, initialHuman), stateThen.facts)
 
         // Human shows signs of disengagement.
-        val futureState = world.state.waitUntilAsync { world ->
+        val futureState = world.waitUntilAsync { world ->
             world.facts.any { it.word == IS_DISENGAGING }
         }
         fakeEngageHuman.asAnyObject().post("humanIsDisengaging")
@@ -633,7 +632,7 @@ class HumanExtractorTest {
         qiHuman: QiHuman,
         predicate: (WorldState, PDDLHuman) -> Boolean
     ): Deferred<WorldState> {
-        return world.state.waitUntilAsync { state ->
+        return world.waitUntilAsync { state ->
             Timber.d("World changed: $state")
             val h = findHuman(state, qiHuman)
             if (h == null) {

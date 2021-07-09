@@ -150,6 +150,7 @@ class HumanExtractor(
     }
 
     fun start() = worldTransaction {
+        Timber.d("Starting human extractor")
         val humanAwareness = qiContext.humanAwareness
         val humansAroundProperty =
             ProxyProperty.create<List<AnyObject>>(humanAwareness, "humansAround", emptyList())
@@ -342,6 +343,7 @@ class HumanExtractor(
         }
 
         // Add humans that appeared.
+        Timber.d("There are ${currentHumans.size} humans around")
         for (qiHuman in currentHumans) {
             if (knownHumans.none { it.qi == qiHuman }) {
                 // Add it in the cache and to the next world change.
@@ -791,6 +793,10 @@ class HumanExtractor(
                 worldChange = worldChange.mergedWith(pendingChange)
             }
         }
+
+        if (!worldChange.isEmpty())
+            Timber.d("Human extractor publishes world change: $worldChange")
+
         world.update(worldChange)
         worldChange.objects.removed.forEach {
             worldData.remove(it)

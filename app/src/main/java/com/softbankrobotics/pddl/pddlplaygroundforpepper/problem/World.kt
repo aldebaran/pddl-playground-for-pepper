@@ -1,6 +1,8 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper.problem
 
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.MutableObservablePropertyBase
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.SetDelta
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.update
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.extractObjects
 import com.softbankrobotics.pddlplanning.Fact
 import com.softbankrobotics.pddlplanning.Instance
@@ -100,6 +102,27 @@ data class WorldChange(
     }
 
     fun isEmpty(): Boolean = objects.isEmpty() && facts.isEmpty()
+
+    override fun toString(): String = string
+
+    private val string: String by lazy {
+        var str = if (objects.added.isNotEmpty())
+            objects.added.joinToString("+", "+", " ")
+        else String()
+
+        str += if (objects.removed.isNotEmpty())
+            objects.removed.joinToString("-", "-", " ")
+        else String()
+
+        str += if (facts.added.isNotEmpty())
+            facts.added.joinToString("+", "+", " ")
+        else String()
+
+        str += if (facts.removed.isNotEmpty())
+            facts.removed.joinToString("-", "-", " ")
+        else String()
+        str
+    }
 
     companion object {
 

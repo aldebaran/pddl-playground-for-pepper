@@ -27,6 +27,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 import timber.log.Timber
 import com.aldebaran.qi.sdk.`object`.human.Human as QiHuman
@@ -640,6 +641,14 @@ class HumanExtractorTest {
             } else {
                 predicate(state, h)
             }
+        }
+    }
+
+    companion object {
+        @JvmStatic
+        @BeforeClass
+        fun setupTest() {
+            Timber.plant(Timber.DebugTree())
         }
     }
 }

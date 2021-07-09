@@ -17,6 +17,7 @@ import com.aldebaran.qi.sdk.`object`.streamablebuffer.StreamablebufferConverter
 import com.aldebaran.qi.sdk.`object`.touch.TouchConverter
 import com.aldebaran.qi.sdk.serialization.EnumConverter
 import com.aldebaran.qi.serialization.QiSerializer
+import timber.log.Timber
 
 
 /**
@@ -43,6 +44,7 @@ private val defaultSerializer by lazy {
     qiSerializer.addConverter(PowerConverter())
     qiSerializer.addConverter(StreamablebufferConverter())
 
+    Timber.d("Default QiType serializer initialized")
     qiSerializer
 }
 

@@ -177,6 +177,9 @@ class MutableWorld: MutableObservablePropertyBase<WorldState>() {
      */
     fun update(change: WorldChange): Boolean = synchronized(this) {
 
+        if (change.isEmpty())
+            return false
+
         // Add new objects first.
         var changed = objects.addAll(change.objects.added)
 

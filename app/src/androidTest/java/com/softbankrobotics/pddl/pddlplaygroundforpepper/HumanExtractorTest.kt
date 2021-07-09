@@ -16,7 +16,6 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldData
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.HumanExtractor
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.getQiHuman
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.asAnyObject
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.qiObjectCast
 import com.softbankrobotics.pddlplanning.*
 import io.mockk.every
@@ -573,7 +572,6 @@ class HumanExtractorTest {
         world: WorldState,
         qiHuman: QiHuman?
     ): PDDLHuman? {
-        val anyHuman = qiHuman?.let { asAnyObject(qiHuman) }
         val matches = world.objects.filter {
             it.type == PDDLHuman.type && data.getQiHuman(it as PDDLHuman) == qiHuman
         }

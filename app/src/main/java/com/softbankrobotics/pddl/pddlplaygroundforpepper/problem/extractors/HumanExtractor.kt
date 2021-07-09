@@ -45,8 +45,8 @@ class HumanExtractor(
     private val touched: Observable<Unit>,
     private val tasks: ObservableProperty<Tasks?>,
     private val initialFacts: Set<Fact> = setOf()
-) : CoroutineScope {
-    override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
+) {
+    val scope = createAsyncCoroutineScope()
 
     /**
      * Actions that, if they are part of the current plan,
@@ -161,7 +161,7 @@ class HumanExtractor(
         // - we do not have a QiHuman associated to it.
         // - we don't know how to reach it.
         subscriptions.add(touched.subscribe {
-            launch {
+            scope.launch {
                 worldTransaction {
                     addWorldChange { world ->
 
@@ -234,7 +234,7 @@ class HumanExtractor(
                 val disengagingHumans = world.facts.filter { it.word == IS_DISENGAGING }
                     .map { PDDLHuman(it.args[0].word) }.toSet()
                 if (disengagingHumans.isNotEmpty()) {
-                    launch { // To avoid disturbing the world state's notification mechanism.
+                    scope.launch { // To avoid disturbing the world state's notification mechanism.
                         worldTransaction {
                             knownHumans.forEach { human ->
                                 if (human.pddl in disengagingHumans && !human.isDisengaging) {
@@ -264,7 +264,7 @@ class HumanExtractor(
                     null
                 }
 
-                launch { // To avoid disturbing the world state's notification mechanism.
+                scope.launch { // To avoid disturbing the world state's notification mechanism.
                     worldTransaction {
                         if (engagedHuman != newEngagedHuman) {
                             if (engagedHuman != null) {
@@ -414,7 +414,7 @@ class HumanExtractor(
                 })
 
                 // Track the location of the human to assess whether they can be engaged.
-                val engagementAssessmentJob = launch {
+                val engagementAssessmentJob = scope.launch {
                     while (true) {
                         val (isInZoi, d, tft) = try {
                             val headFrame = qiHuman.async().headFrame.await()
@@ -643,7 +643,7 @@ class HumanExtractor(
      * Shortcut to schedule the re-evaluation of existence and engagement.
      */
     private fun scheduleEngagementUpdate(human: HumanData, delayTimeNs: Long) {
-        launch { // TODO: cancel previously scheduled evaluations according to timeouts.
+        scope.launch { // TODO: cancel previously scheduled evaluations according to timeouts.
             if (delayTimeNs > 0L) {
                 delay(delayTimeNs / NOF_NS_PER_MS)
                 updateEngagement(human)

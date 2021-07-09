@@ -154,9 +154,9 @@ class HumanExtractor(
         val humanAwareness = qiContext.humanAwareness
         val humansAroundProperty =
             ProxyProperty.create<List<AnyObject>>(humanAwareness, "humansAround", emptyList())
-        subscriptions.add(humansAroundProperty.subscribeAndGet { anyHumans ->
+        humansAroundProperty.subscribeAndGet { anyHumans ->
             processHumansAround(anyHumans.map { qiObjectCast(it) })
-        })
+        }.addTo(subscriptions)
 
         // When tablet is touched, we know there is an interested human, but:
         // - we do not have a QiHuman associated to it.

@@ -181,18 +181,20 @@ class MutableWorld: MutableObservablePropertyBase<WorldState>() {
             return false
 
         // Add new objects first.
-        var changed = objects.addAll(change.objects.added)
+        val objectsAdded = objects.addAll(change.objects.added)
+        var changed = objectsAdded
 
         // Update facts.
         if (!change.facts.isEmpty()) {
-            changed = true
             var updatedChange = change.facts
             updatedChange = applyDefaultRules(facts, updatedChange)
-            changed = changed || facts.update(updatedChange)
+            val factsChanged = facts.update(updatedChange)
+            changed = changed || factsChanged
         }
 
         // Remove objects last.
-        changed = changed || objects.removeAll(change.objects.removed)
+        val objectsRemoved = objects.removeAll(change.objects.removed)
+        changed = changed || objectsRemoved
 
         if (changed) {
             notifySubscribers(get())
@@ -222,6 +224,7 @@ class MutableWorld: MutableObservablePropertyBase<WorldState>() {
     }
 
     override fun get(): WorldState = synchronized(this) {
+        // Using toSet() creates a copy of the array so that the result really is a constant
         WorldState(objects.toSet(), facts.toSet())
     }
 

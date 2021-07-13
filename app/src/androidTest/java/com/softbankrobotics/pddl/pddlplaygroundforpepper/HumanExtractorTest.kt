@@ -280,7 +280,7 @@ class HumanExtractorTest {
         q.fakeHumanAwareness.humansAround.setValue(listOf(qiHuman))
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
         val stateFinally = world.get()
-        assertEquals(2, stateFinally.objects.size)
+        assertOnlyOneHuman(initialHuman, stateFinally)
         assertTrue(
             evaluateExpression(
                 preferred_to_be_engaged(initialHuman),
@@ -324,7 +324,7 @@ class HumanExtractorTest {
         fakeHuman.engagementIntention.setValue(EngagementIntentionState.INTERESTED)
         delay(USUAL_FUTURE_TIMEOUT_MS_IN_TESTS)
         val stateFinally = world.get()
-        assertEquals(2, stateFinally.objects.size)
+        assertOnlyOneHuman(initialHuman, stateFinally)
         assertTrue(
             evaluateExpression(
                 preferred_to_be_engaged(initialHuman),
@@ -647,6 +647,12 @@ class HumanExtractorTest {
         @BeforeClass
         fun setupTest() {
             Timber.plant(Timber.DebugTree())
+        }
+
+        fun assertOnlyOneHuman(h: PDDLHuman, state: WorldState) {
+            assertTrue(
+                "In the current world, there is not the human $h and only that human",
+                state.objects.all { it !is PDDLHuman || it == h })
         }
     }
 }

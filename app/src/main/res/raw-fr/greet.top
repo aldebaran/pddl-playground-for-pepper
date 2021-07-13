@@ -1,0 +1,7 @@
+topic: ~greet()
+
+# Replying to speech
+concept:(hello) ["\style=joyful\ Salut! \style=neutral\ "]
+concept:(name) ["\style=joyful\ Mon nom est Pepper! C'est moi qui vous accueille aujourd'hui. \style=neutral\ "]
+
+proposal: %start ~hello ~name %finished

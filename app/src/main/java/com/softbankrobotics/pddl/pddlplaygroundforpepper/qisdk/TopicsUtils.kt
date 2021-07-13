@@ -1,4 +1,4 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk
 
 import android.content.Context
 import com.aldebaran.qi.Future
@@ -7,6 +7,7 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.*
 import com.aldebaran.qi.sdk.builder.TopicBuilder
 import com.aldebaran.qi.sdk.util.IOUtils
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
@@ -26,9 +27,12 @@ suspend fun createTopicFromResource(context: Context, qiContext: QiContext, reso
  */
 suspend fun createTopicsFromResources(context: Context, qiContext: QiContext, vararg resources: Int): List<Topic> {
     return resources.map {
-        TopicBuilder.with(qiContext)
+        val topic = TopicBuilder.with(qiContext)
             .withText(IOUtils.fromRaw(context, it))
             .buildAsync().await()
+        val name = topic.async().name.await()
+        Timber.d("Created topic \"$name\"")
+        topic
     }
 }
 
@@ -239,29 +243,27 @@ fun waitForBookmark(qiChatbot: QiChatbot, topics: List<Topic>, bookmarkName: Str
 /**
  * Waits asynchronously for a Qi Chatbot to reach a bookmark in a topic.
  */
-fun waitForBookmark(
+suspend fun waitForBookmark(
     qiChatbot: QiChatbot,
     topic: Topic,
     bookmarkName: String
-): Future<Void> {
-    return toFutureVoid(createAsyncCoroutineScope()) {
-        withDisposablesSuspend { disposables ->
-            val bookmarkReached = CompletableDeferred<Unit>()
-            val bookmark = topic.async().bookmarks.await()[bookmarkName]
-            if (bookmark != null) {
-                val bookmarkStatus = qiChatbot.async().bookmarkStatus(bookmark).await()
-                val onReachedListener = BookmarkStatus.OnReachedListener {
-                    bookmarkReached.complete(Unit)
-                }
-                bookmarkStatus.async().addOnReachedListener(onReachedListener).await()
-                disposables.add {
-                    bookmarkStatus.async().removeOnReachedListener(onReachedListener).await()
-                }
-                bookmarkReached.await()
-            } else {
-                val topicName = topic.async().name.await()
-                throw RuntimeException("no such bookmark \"$bookmarkName\" in topic \"$topicName\"")
+) {
+    withDisposablesSuspend { disposables ->
+        val bookmarkReached = CompletableDeferred<Unit>()
+        val bookmark = topic.async().bookmarks.await()[bookmarkName]
+        if (bookmark != null) {
+            val bookmarkStatus = qiChatbot.async().bookmarkStatus(bookmark).await()
+            val onReachedListener = BookmarkStatus.OnReachedListener {
+                bookmarkReached.complete(Unit)
             }
+            bookmarkStatus.async().addOnReachedListener(onReachedListener).await()
+            disposables.add {
+                bookmarkStatus.async().removeOnReachedListener(onReachedListener).await()
+            }
+            bookmarkReached.await()
+        } else {
+            val topicName = topic.async().name.await()
+            throw RuntimeException("no such bookmark \"$bookmarkName\" in topic \"$topicName\"")
         }
     }
 }
@@ -273,49 +275,39 @@ fun waitForFinishedBookmark(qiChatbot: QiChatbot, topics: List<Topic>): Future<V
     return waitForBookmark(qiChatbot, topics, "finished")
 }
 
-fun waitForStartedBookmark(qiChatbot: QiChatbot, topic: Topic): Future<Void> {
-    return waitForBookmark(qiChatbot, topic, "started")
-}
+suspend fun waitForStartedBookmark(qiChatbot: QiChatbot, topic: Topic) =
+    waitForBookmark(qiChatbot, topic, "started")
 
-fun waitForFinishedBookmark(qiChatbot: QiChatbot, topic: Topic): Future<Void> {
-    return waitForBookmark(qiChatbot, topic, "finished")
-}
+suspend fun waitForFinishedBookmark(qiChatbot: QiChatbot, topic: Topic) =
+    waitForBookmark(qiChatbot, topic, "finished")
 
-fun goToBookmark(qiChatbot: QiChatbot, topic: Topic, bookmarkName: String): Future<Void> {
-    return goToBookmark(qiChatbot, listOf(topic), bookmarkName)
-}
+suspend fun goToBookmark(qiChatbot: QiChatbot, topic: Topic, bookmarkName: String) =
+    goToBookmark(qiChatbot, listOf(topic), bookmarkName)
 
 //topic.bookmarks[bookmarkName] is a call to naoqi, it takes time, just like {Bookmark}.name
 //TODO fix like Valkyrie, store a list of Bookmarks per Topic at the start, it'll GREATLY improve your reaction/go to bookmark time.
 
-fun goToBookmark(qiChatbot: QiChatbot, topics: List<Topic>, bookmarkName: String): Future<Void> {
-    var future = Future.of<Void>(null)
+suspend fun goToBookmark(qiChatbot: QiChatbot, topics: List<Topic>, bookmarkName: String) {
     Timber.d("Looking for bookmark $bookmarkName in ${topics.size} topics")
     for (topic in topics) {
-        future = future.thenCompose {
-            topic.async().bookmarks.andThenCompose { bookmarks ->
-                val bookmark = bookmarks[bookmarkName]
-                if (bookmark != null) {
-                    Timber.d("Found bookmark $bookmarkName in topic ${topic.name}")
-                    qiChatbot.async().goToBookmark(
-                        bookmark,
-                        AutonomousReactionImportance.LOW,
-                        AutonomousReactionValidity.DELAYABLE
-                    )
-                } else {
-                    Timber.d("No bookmark $bookmarkName in topic ${topic.name}")
-                    Future.of<Void>(null)
-                }
-            }
+        val bookmarks = topic.async().bookmarks.await()
+        val bookmark = bookmarks[bookmarkName]
+        if (bookmark != null) {
+            Timber.d("Found bookmark $bookmarkName in topic ${topic.name}")
+            qiChatbot.async().goToBookmark(
+                bookmark,
+                AutonomousReactionImportance.LOW,
+                AutonomousReactionValidity.DELAYABLE
+            ).await()
+        } else {
+            Timber.d("No bookmark $bookmarkName in topic ${topic.name}")
         }
     }
-    return future.thenConsume { Timber.d("Out of goto bookmark") }
+    Timber.d("Out of goto bookmark")
 }
 
-fun goToStartBookmark(qiChatbot: QiChatbot, topics: List<Topic>): Future<Void> {
-    return goToBookmark(qiChatbot, topics, "start")
-}
+suspend fun goToStartBookmark(qiChatbot: QiChatbot, topics: List<Topic>) =
+    goToBookmark(qiChatbot, topics, "start")
 
-fun goToStartBookmark(qiChatbot: QiChatbot, topic: Topic): Future<Void> {
-    return goToBookmark(qiChatbot, listOf(topic), "start")
-}
+suspend fun goToStartBookmark(qiChatbot: QiChatbot, topic: Topic) =
+    goToBookmark(qiChatbot, listOf(topic), "start")

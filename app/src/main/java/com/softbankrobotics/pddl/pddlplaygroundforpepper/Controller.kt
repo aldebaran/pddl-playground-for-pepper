@@ -103,17 +103,21 @@ class Controller(
      */
     private var hasAlreadyDoneAPlan = false
 
-    suspend fun setGoal(goal: Expression) {
-        stop()
+    suspend fun setGoal(goal: Expression) = mutex.withLock {
+        val wasRunning = isRunning
+        stopUnsafe()
         planningHelper.setGoal(goal)
-        start()
+        if (wasRunning)
+            startUnsafe()
     }
 
-    suspend fun start() = mutex.withLock {
+    suspend fun start() = mutex.withLock { startUnsafe() }
+
+    suspend fun startUnsafe() {
         hasAlreadyDoneAPlan = false
         if (isRunning) {
             Timber.w("Controller was started but it was already running.")
-            return@withLock
+            return
         }
 
         val humanExtractor = HumanExtractor(qiContext, world, data, screenTouched, mutableTasks)
@@ -137,7 +141,9 @@ class Controller(
         isRunning = true
     }
 
-    suspend fun stop() = mutex.withLock {
+    suspend fun stop() = mutex.withLock { stopUnsafe() }
+
+    private suspend fun stopUnsafe() {
         isRunning = false
         disposables.dispose()
         hasAlreadyDoneAPlan = false
@@ -242,16 +248,22 @@ class Controller(
             throw Exception("Action name \"${task.action}\" does not exist")
 
         // Updating the state of the chat to match next action's requirements.
-        val switchingChatState = if (actionAndDeclaration != null) {
+        if (actionAndDeclaration != null) {
             when (actionAndDeclaration.declaration.chatState) {
-                ActionDeclaration.ChatState.RUNNING -> chat.async().run().also { chatRunning = it }
-                ActionDeclaration.ChatState.STOPPED -> chatRunning.also { it.requestCancellationWithoutException() }
-                ActionDeclaration.ChatState.INDIFFERENT -> Future.of<Void>(null)
+                ActionDeclaration.ChatState.RUNNING -> {
+                    if (chatRunning.isDone) {
+                        val waitingForStarted = CompletableDeferred<Unit>()
+                        chat.async().addOnStartedListener {
+                            waitingForStarted.complete(Unit)
+                        }.await()
+                        chatRunning = chat.async().run()
+                        waitingForStarted.await()
+                    }
+                }
+                ActionDeclaration.ChatState.STOPPED -> chatRunning.cancelAndJoin()
+                ActionDeclaration.ChatState.INDIFFERENT -> {}
             }
-        } else {
-            chatRunning.also { it.requestCancellationWithoutException() }
         }
-        switchingChatState.await()
 
         if (actionAndDeclaration != null) {
             val parameters = task.parameters.map(resolveObject).toTypedArray()
@@ -259,7 +271,6 @@ class Controller(
             val view = actionAndDeclaration.action.view ?: defaultView
             runningCurrentTask = scope.async {
                 try {
-
                     val worldChange = actionAndDeclaration.action.runWithOnStarted(parameters) {
                         runBlocking {
                             onUiThread {
@@ -268,8 +279,8 @@ class Controller(
                             starting.complete(Unit)
                         }
                     }
-                    Timber.d("\"${task.action}\" was successful")
-                    Timber.d("\"${task.action}\" produced $worldChange")
+                    Timber.d("$task was successful")
+                    Timber.d("$task produced $worldChange")
 
                     scope.launch {
                         updateWorldAndTryStartNextTask(
@@ -279,15 +290,15 @@ class Controller(
                         )
                     }
                 } catch (e: CancellationException) {
-                    Timber.d("${task.action} was cancelled")
+                    Timber.d("$task was cancelled")
                 } catch (e: Throwable) {
-                    Timber.d(e, "${task.action} finished with error")
+                    Timber.d(e, "$task finished with error")
                 } finally {
                     starting.complete(Unit)
                 }
             }
             starting.await()
-            Timber.d("${task.action} was started")
+            Timber.d("$task was started")
         } else {
             onUiThread {
                 switchView(defaultView, "defaultView", frame)
@@ -384,7 +395,7 @@ class Controller(
         }
 
         private fun actionNameOrNothing(task: Task?): String {
-            return if (task != null) "\"$task\"" else "nothing"
+            return task?.toString() ?: "nothing"
         }
     }
 }

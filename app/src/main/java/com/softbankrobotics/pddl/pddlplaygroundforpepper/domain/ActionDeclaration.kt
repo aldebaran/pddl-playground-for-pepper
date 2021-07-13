@@ -3,7 +3,7 @@ package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 import android.content.Context
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.createTopicFromResource
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.createTopicFromResource
 import com.softbankrobotics.pddlplanning.Action
 import com.softbankrobotics.pddlplanning.Instance
 import com.softbankrobotics.pddlplanning.Task

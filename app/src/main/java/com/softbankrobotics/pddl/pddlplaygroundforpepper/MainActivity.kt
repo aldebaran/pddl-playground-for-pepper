@@ -183,11 +183,11 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         ensuringController = scope.async {
             try {
                 Timber.d("Setting up controller")
-                val controller = ensureController(qiContext).apply {
+                ensureController(qiContext).apply {
+                    setGoal(humansAreGreeted.goal)
                     Timber.d("Starting controller")
                     start()
                 }
-                controller.setGoal(humansAreGreeted.goal)
             } catch (e: RemoteException) {
                 Timber.w(e, "Remote service issue prevented initialization")
                 reportErrorAndScheduleCall(getString(R.string.remote_error)) {

@@ -80,10 +80,10 @@ class HumanExtractorTest {
         assertNotIn(can_be_engaged(pddlHuman), facts)
 
         // Also check that the initial facts were published for this human.
-        assertTrue(initialFacts.all { fact ->
+        initialFacts.forEach { fact ->
             val applied = applyParameters(fact, mapOf(h to pddlHuman))
-            evaluateExpression(applied, state)
-        })
+            assert(applied, state)
+        }
     }
 
     @Test

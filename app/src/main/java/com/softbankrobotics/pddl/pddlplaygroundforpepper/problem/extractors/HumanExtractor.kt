@@ -6,6 +6,7 @@ import com.aldebaran.qi.sdk.*
 import com.aldebaran.qi.sdk.BuildConfig
 import com.aldebaran.qi.sdk.`object`.actuation.Frame
 import com.aldebaran.qi.sdk.`object`.human.EngagementIntentionState
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.applyParameters
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
@@ -15,11 +16,11 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.ProxyProperty
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.asAnyObject
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.isInArc
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.qiObjectCast
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.splitFactsByPolarity
 import com.softbankrobotics.pddlplanning.*
 import com.softbankrobotics.pddlplanning.utils.evaluateExpression
 import kotlinx.coroutines.*
 import timber.log.Timber
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.PI
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -31,12 +32,12 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.Human as PDDLHum
  * and associates them to symbolic statements in the PDDL world, via the WorldData.
  * Assesses whether humans are present, engageable or engaged,
  * and updates the world with this information.
- * Implements the engagement policy by flagging the best human with (preferred_human_to_engage ?h).
+ * Implements an engagement policy by flagging the best human with (preferred_human_to_engage ?h).
  * @param qiContext Access to NAOqi.
  * @param world The PDDL world.
  * @param touched Signals touch events.
  * @param tasks The current tasks of the robot.
- * @param initialFacts The facts to apply to humans when they are met.
+ * @param initialFacts Facts to add for every human when they are met. Human parameter "?h" is replaced by the actual human object.
  */
 class HumanExtractor(
     private val qiContext: QiContext,
@@ -562,8 +563,14 @@ class HumanExtractor(
     /**
      * Compute the initial facts for the given human.
      */
-    private fun newHumanWorldChange(pddlHuman: PDDLHuman): WorldChange =
-        WorldChange(objects = SetDelta.of(pddlHuman))
+    private fun newHumanWorldChange(pddlHuman: PDDLHuman): WorldChange {
+        val parameters = mapOf<Instance, Instance>(h to pddlHuman)
+        val appliedInitialFacts = initialFacts.map { applyParameters(it, parameters) }.toSet()
+        return WorldChange(
+            objects = SetDelta.of(pddlHuman),
+            facts = splitFactsByPolarity(appliedInitialFacts)
+        )
+    }
 
     /**
      * Reevaluates whether disengagement can be confirmed.

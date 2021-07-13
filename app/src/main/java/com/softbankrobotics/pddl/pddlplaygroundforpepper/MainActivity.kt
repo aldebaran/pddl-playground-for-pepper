@@ -12,6 +12,7 @@ import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayS
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.RetryCountdownBinding
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.ViewLoadingBinding
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.humansAreGreeted
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -141,7 +142,7 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
                 return currentController
 
             val newController =
-                Controller.createController(this, frameLayout, screenTouched, qiContext)
+                Controller.createDefaultController(this, frameLayout, screenTouched, qiContext)
             this.controller = newController
             return newController
         }
@@ -180,10 +181,11 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         ensuringController = scope.async {
             try {
                 Timber.d("Setting up controller")
-                ensureController(qiContext).apply {
+                val controller = ensureController(qiContext).apply {
                     Timber.d("Starting controller")
                     start()
                 }
+                controller.setGoal(humansAreGreeted.goal)
             } catch (e: RemoteException) {
                 Timber.w(e, "Remote service issue prevented initialization")
                 reportErrorAndScheduleCall(getString(R.string.remote_error)) {

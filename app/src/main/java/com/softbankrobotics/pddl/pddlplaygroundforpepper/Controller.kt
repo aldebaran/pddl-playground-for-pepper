@@ -413,7 +413,7 @@ class Controller(
 
     companion object {
 
-        suspend fun createController(
+        suspend fun createDefaultController(
             context: Context,
             frame: FrameLayout,
             screenTouched: Observable<Unit>,

@@ -3,6 +3,7 @@ package com.softbankrobotics.pddl.pddlplaygroundforpepper.problem
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.Human
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.feels
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.happy
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.was_greeted
 import com.softbankrobotics.pddlplanning.Goal
 import com.softbankrobotics.pddlplanning.forall
 import com.softbankrobotics.pddlplanning.utils.Named
@@ -17,7 +18,12 @@ class NamedGoal(override val name: String, val goal: Goal) : Named
  */
 private val h = Human("?h")
 
-val makeHumansHappy = NamedGoal(
+val humansAreGreeted = NamedGoal(
+    "Humans are greeted",
+    forall(h, was_greeted(h))
+)
+
+val humansAreHappy = NamedGoal(
     "Make humans happy",
     forall(h, feels(h, happy))
 )
@@ -26,5 +32,6 @@ val makeHumansHappy = NamedGoal(
  * The index of all declared goals.
  */
 val goalsIndex = indexOf(
-    makeHumansHappy
+    humansAreGreeted,
+    humansAreHappy
 )

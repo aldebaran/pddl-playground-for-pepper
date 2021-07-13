@@ -53,4 +53,7 @@ class Emotion(name: String) : Instance(name) {
 /**
  * The index of all declared types.
  */
-val typesIndex = indexOf(Predicate.type, PhysicalObject.type, AgentivePhysicalObject.type, Human.type)
+val typesIndex = indexOf(
+    Predicate.type, PhysicalObject.type, AgentivePhysicalObject.type, Human.type,
+    Emotion.type
+)

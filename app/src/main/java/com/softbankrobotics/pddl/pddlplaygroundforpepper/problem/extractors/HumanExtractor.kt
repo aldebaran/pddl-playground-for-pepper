@@ -145,6 +145,7 @@ class HumanExtractor(
         val instancesToRemove = knownHumans.map(HumanData::pddl).toSet()
         addWorldChange {
             knownHumans.clear()
+            instancesToRemove.forEach { toRemove -> worldData.remove(toRemove) }
             WorldChange(objects = SetDelta(removed = instancesToRemove))
         }
         updatePreferredHuman()
@@ -276,11 +277,12 @@ class HumanExtractor(
                                     Timber.d("${humanData.pddl} is disengaged and will now be forgotten")
                                     knownHumans.remove(humanData)
 
-                                    addWorldChange(
+                                    addWorldChange {
+                                        worldData.remove(humanData.pddl)
                                         WorldChange(
                                             objects = SetDelta(removed = setOf(humanData.pddl))
                                         )
-                                    )
+                                    }
 
                                     updatePreferredHuman()
 
@@ -330,7 +332,6 @@ class HumanExtractor(
                     scheduleEngagementUpdate(human, VISIBLE_TIMEOUT_NS)
                     worldData.remove(human.pddl, QISDK_HUMAN_DATA_KEY)
                     WorldChange(
-                        objects = SetDelta.of(human.pddl),
                         facts = SetDelta(
                             added = setOf(),
                             removed = setOf(
@@ -359,11 +360,7 @@ class HumanExtractor(
                         knownHuman.qi = qiHuman
                         alreadyKnownData = knownHuman
                         // If yes, also replace the object binding.
-                        addWorldChange(
-                            WorldChange(
-                                objects = SetDelta.of(knownHuman.pddl) // knows_path is added later
-                            )
-                        )
+                        worldData.set(knownHuman.pddl, QISDK_HUMAN_DATA_KEY, qiHuman)
                         updatePreferredHuman()
                         foundMatchingHuman = true
                     }

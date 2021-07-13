@@ -829,7 +829,11 @@ class HumanExtractor(
         private const val NOF_MS_PER_S = 1000
         private const val NOF_NS_PER_MS = 1000000
         private const val NOF_NS_PER_S = NOF_MS_PER_S * NOF_NS_PER_MS
-        const val VISIBLE_TIMEOUT_MS = 1000L
+
+        /**
+         * Time after which the disappearance of a human leads to considering them disengaged or absent.
+         */
+        const val VISIBLE_TIMEOUT_MS = 5000L
         const val VISIBLE_TIMEOUT_NS = VISIBLE_TIMEOUT_MS * NOF_NS_PER_MS
         const val TOUCH_ENGAGEMENT_TIMEOUT_MS = 30000L
         const val TOUCH_ENGAGEMENT_TIMEOUT_NS = TOUCH_ENGAGEMENT_TIMEOUT_MS * NOF_NS_PER_MS

@@ -74,6 +74,8 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
         super.onCreate(savedInstanceState)
         setSpeechBarDisplayStrategy(SpeechBarDisplayStrategy.IMMERSIVE)
         setContentView(R.layout.main)
+        Timber.plant(Timber.DebugTree())
+        QiSDK.register(this, this)
     }
 
     /**

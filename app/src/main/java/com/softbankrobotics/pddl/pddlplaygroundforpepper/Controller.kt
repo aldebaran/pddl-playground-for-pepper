@@ -176,7 +176,7 @@ class Controller(
             }
 
             if (plan.isEmpty()) {
-                Timber.d("Found empty in $planTime ms, there is nothing to do!")
+                Timber.d("Found empty plan in $planTime ms, there is nothing to do!")
             } else {
                 Timber.d("Found plan in $planTime ms:\n${plan.joinToString("\n")}")
             }
@@ -198,6 +198,7 @@ class Controller(
 
         // Make sure to work on the latest state, based the current state of the world.
         val state = world.get()
+        Timber.d("Planning for world:\n$state")
 
         val finishedTasksDuringThePlanning = mutableListOf<Task?>()
         val currentRunActionResultSubcription = lastFinishedTask.subscribe {

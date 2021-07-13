@@ -798,9 +798,6 @@ class HumanExtractor(
             }
         }
 
-        if (!worldChange.isEmpty())
-            Timber.d("Human extractor publishes world change: $worldChange")
-
         world.update(worldChange)
         worldChange.objects.removed.forEach {
             worldData.remove(it)

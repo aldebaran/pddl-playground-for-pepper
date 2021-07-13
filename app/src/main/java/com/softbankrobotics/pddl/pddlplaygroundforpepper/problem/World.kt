@@ -107,19 +107,19 @@ data class WorldChange(
 
     private val string: String by lazy {
         var str = if (objects.added.isNotEmpty())
-            objects.added.joinToString("+", "+", " ")
+            objects.added.joinToString(" +", "+", " ")
         else String()
 
         str += if (objects.removed.isNotEmpty())
-            objects.removed.joinToString("-", "-", " ")
+            objects.removed.joinToString(" -", "-", " ")
         else String()
 
         str += if (facts.added.isNotEmpty())
-            facts.added.joinToString("+", "+", " ")
+            facts.added.joinToString(" +", "+", " ")
         else String()
 
         str += if (facts.removed.isNotEmpty())
-            facts.removed.joinToString("-", "-", " ")
+            facts.removed.joinToString(" -", "-", " ")
         else String()
         str
     }

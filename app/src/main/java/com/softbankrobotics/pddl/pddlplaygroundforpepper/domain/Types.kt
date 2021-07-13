@@ -4,6 +4,20 @@ import com.softbankrobotics.pddlplanning.Instance
 import com.softbankrobotics.pddlplanning.Type
 import com.softbankrobotics.pddlplanning.Typed
 import com.softbankrobotics.pddlplanning.utils.indexOf
+import java.util.*
+import kotlin.math.pow
+import kotlin.reflect.full.companionObjectInstance
+
+/**
+ * The index of all declared types.
+ */
+val typesIndex = indexOf(
+    Predicate.type,
+    PhysicalObject.type,
+    AgentivePhysicalObject.type,
+    Human.type,
+    Emotion.type
+)
 
 /** Reflexive type to refer to PDDL predicates. */
 class Predicate(name: String) : Instance(name) {
@@ -50,10 +64,26 @@ class Emotion(name: String) : Instance(name) {
     }
 }
 
+
+// TODO: the following functions should be moved to the PDDL Planning library, which should support extension.
 /**
- * The index of all declared types.
+ * Generates a random PDDL object of any instance type.
  */
-val typesIndex = indexOf(
-    Predicate.type, PhysicalObject.type, AgentivePhysicalObject.type, Human.type,
-    Emotion.type
-)
+inline fun <reified T : Instance> generateInstance(): T {
+    val strId = randomNumberString(5)
+    // The code below seems risky, but in fact if T is derived from Instance,
+    // it should definitely announce the related PDDL type in its companion.
+    // The PDDL type object contains a factory that is supposed to return a T, seen as an Instance.
+    val companion = T::class.companionObjectInstance!! as Typed
+    val typeName = companion.type.name
+    return companion.type.createInstance("${typeName}_$strId") as T
+}
+
+/**
+ * Generates a random number string of N digits.
+ */
+fun randomNumberString(n: Int): String {
+    val max = 10.0.pow(n.toDouble()) - 1
+    val id = Random().nextInt(max.toInt())
+    return id.toString().padStart(n, '0')
+}

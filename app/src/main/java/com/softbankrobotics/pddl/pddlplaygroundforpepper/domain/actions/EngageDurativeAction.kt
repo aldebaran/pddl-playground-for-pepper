@@ -5,7 +5,7 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
 import com.aldebaran.qi.sdk.`object`.human.Human
 import com.aldebaran.qi.sdk.builder.EngageHumanBuilder
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.PlannableAction
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.PlannableAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.cancelAndJoin
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*

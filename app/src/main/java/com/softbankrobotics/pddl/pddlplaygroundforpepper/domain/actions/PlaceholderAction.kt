@@ -1,10 +1,10 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions
 
 import android.content.Context
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.PlannableAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.R
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.createView
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.PlaceholderActionBinding
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.PlannableAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldChange
 import com.softbankrobotics.pddlplanning.Action

@@ -1,12 +1,22 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper
 
+import android.content.Context
+import android.content.Intent
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Observable
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.ActionDeclaration
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldChange
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
-import com.softbankrobotics.pddlplanning.Expression
+import com.softbankrobotics.pddlplanning.*
+import com.softbankrobotics.pddlplanning.utils.Index
+import com.softbankrobotics.pddlplanning.utils.createDomain
+import com.softbankrobotics.pddlplanning.utils.createProblem
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertTrue
+import timber.log.Timber
+import kotlin.reflect.full.companionObjectInstance
 
 const val USUAL_FUTURE_TIMEOUT_MS_IN_TESTS = 500L
 

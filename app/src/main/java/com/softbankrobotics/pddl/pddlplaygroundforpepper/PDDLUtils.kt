@@ -1,9 +1,51 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper
 
+import android.content.Context
+import android.content.Intent
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.SetDelta
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.ActionDeclaration
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldChange
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
 import com.softbankrobotics.pddlplanning.utils.evaluateExpression
 import com.softbankrobotics.pddlplanning.*
+import com.softbankrobotics.pddlplanning.utils.createDomain
+import com.softbankrobotics.pddlplanning.utils.createProblem
+import kotlinx.coroutines.runBlocking
+import timber.log.Timber
+import java.util.*
+import kotlin.math.pow
+import kotlin.reflect.full.companionObjectInstance
+import kotlin.reflect.full.primaryConstructor
+
+// TODO: move to PDDL Planning library?
+data class Domain(
+    val types: Set<Type>,
+    val constants: Set<Instance>,
+    val predicates: Set<Expression>,
+    val actions: Set<Action>
+) {
+    private val string: String by lazy {
+        createDomain(types, constants, predicates, actions)
+    }
+
+    override fun toString(): String = string
+}
+
+data class Problem(
+    val objects: Set<Instance>,
+    val init: Set<Fact>,
+    val goal: Expression
+) {
+    private val string: String by lazy {
+        val splitGoals = if (goal.word == and_operator_name)
+            goal.args.toList()
+        else
+            listOf(goal)
+        createProblem(objects, init, splitGoals)
+    }
+
+    override fun toString(): String = string
+}
 
 /**
  * Thrown when a PDDL object with no name is encountered.

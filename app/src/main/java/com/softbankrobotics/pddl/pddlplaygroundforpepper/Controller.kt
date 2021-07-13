@@ -13,8 +13,6 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.HumanExtractor
 import com.softbankrobotics.pddlplanning.*
 import com.softbankrobotics.pddlplanning.utils.Index
-import com.softbankrobotics.pddlplanning.utils.createDomain
-import com.softbankrobotics.pddlplanning.utils.createProblem
 import com.softbankrobotics.pddlplanning.utils.toIndex
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
@@ -56,6 +54,17 @@ class Controller(
 
     private var chatRunning: Future<Void> = Future.of(null)
 
+    /** The function used to search plans solving the problem. */
+    private val planSearchFunction by lazy {
+        runBlocking {
+            val intent = Intent(IPDDLPlannerService.ACTION_SEARCH_PLANS_FROM_PDDL)
+            intent.`package` = "com.softbankrobotics.fastdownward"
+            createPlanSearchFunctionFromService(context, intent)
+        }
+    }
+
+    private val planningHelper = PlanningHelper(planSearchFunction, domain)
+
     /** A local worker to queue plan searches safely, and avoid redundant planning attempts. */
     private val planningWorker = SingleTaskQueueWorker()
 
@@ -94,20 +103,9 @@ class Controller(
      */
     private var hasAlreadyDoneAPlan = false
 
-    /** The function used to search plans solving the problem. */
-    private val planSearchFunction by lazy {
-        runBlocking {
-            val intent = Intent(IPDDLPlannerService.ACTION_SEARCH_PLANS_FROM_PDDL)
-            intent.`package` = "com.softbankrobotics.fastdownward"
-            createPlanSearchFunctionFromService(context, intent)
-        }
-    }
-
-    private var goal = Expression()
-
-    suspend fun setGoal(expression: Expression) {
+    suspend fun setGoal(goal: Expression) {
         stop()
-        goal = expression
+        planningHelper.setGoal(goal)
         start()
     }
 
@@ -149,43 +147,7 @@ class Controller(
      * Search plan given the current configuration and the provided facts and goals.
      */
     suspend fun searchPlan(worldState: WorldState): Result<Tasks> = mutex.withLock {
-        searchPlanPrivate(worldState)
-    }
-
-    /**
-     * Unsafe version of the search plan method.
-     * Used internally to avoid double-locking the mutex.
-     */
-    private suspend fun searchPlanPrivate(state: WorldState): Result<Tasks> {
-        val startTime = System.currentTimeMillis()
-
-        /*
-         * The problem is updated every time, to account for changes in states or goals.
-         */
-        val problem = Problem(
-            state.objects - domain.constants, // prevents duplicate declaration to interfere
-            state.facts,
-            goal
-        )
-
-        return try {
-            val plan = planSearchFunction.invoke(domain.toString(), problem.toString(), null)
-            val planTime = System.currentTimeMillis() - startTime
-            if (planTime > 2000) {
-                Timber.w("Planning took especially long!")
-            }
-
-            if (plan.isEmpty()) {
-                Timber.d("Found empty plan in $planTime ms, there is nothing to do!")
-            } else {
-                Timber.d("Found plan in $planTime ms:\n${plan.joinToString("\n")}")
-            }
-            Result.success(plan)
-        } catch (t: Throwable) {
-            val planTime = System.currentTimeMillis() - startTime
-            Timber.e(t, "Planning error after $planTime ms: ${t.message}")
-            Result.failure(t) // there is no next plan, we are blocked
-        }
+        planningHelper.searchPlan(worldState)
     }
 
     /**
@@ -207,7 +169,7 @@ class Controller(
         }
 
         // Find a plan, either from cache or by running the planner.
-        val planningResult = searchPlanPrivate(state)
+        val planningResult = planningHelper.searchPlan(state)
         val plan = planningResult.getOrNull()
 
         currentRunActionResultSubcription.dispose()
@@ -378,35 +340,6 @@ class Controller(
         skipCurrentPlanning = false
     }
 
-    data class Domain(
-        val types: Set<Type>,
-        val constants: Set<Instance>,
-        val predicates: Set<Expression>,
-        val actions: Set<Action>
-    ) {
-        private val string: String by lazy {
-            createDomain(types, constants, predicates, actions)
-        }
-
-        override fun toString(): String = string
-    }
-
-    data class Problem(
-        val objects: Set<Instance>,
-        val init: Set<Fact>,
-        val goal: Expression
-    ) {
-        private val string: String by lazy {
-            val splitGoals = if (goal.word == and_operator_name)
-                goal.args.toList()
-            else
-                listOf(goal)
-            createProblem(objects, init, splitGoals)
-        }
-
-        override fun toString(): String = string
-    }
-
     data class ActionAndDeclaration(
         val action: PlannableAction,
         val declaration: ActionDeclaration
@@ -426,12 +359,7 @@ class Controller(
             /*
              * The domain includes every type, constant, predicate or action we declared.
              */
-            val domain = Domain(
-                typesIndex.values.toSet(),
-                constantsIndex.values.toSet(),
-                predicatesIndex.values.toSet(),
-                actionsIndex.values.map { it.pddl }.toSet()
-            )
+            val domain = defaultDomain
 
             val allTopics = actionsIndex.flatMap { (_, declaration) ->
                 declaration.createTopics?.invoke(qiContext, context) ?: listOf()

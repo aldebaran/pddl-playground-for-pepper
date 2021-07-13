@@ -1,7 +1,8 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 
 import android.view.View
 import com.aldebaran.qi.Future
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.DisposablesSuspend
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Observable
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Signal
@@ -9,6 +10,7 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.withDisposablesS
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldChange
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
 import com.softbankrobotics.pddlplanning.Instance
+import com.softbankrobotics.pddlplanning.Task
 import com.softbankrobotics.pddlplanning.utils.Named
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -191,3 +193,7 @@ abstract class PlannableAction(val pddl: PDDLAction, val view: View? = null) : N
         }
     }
 }
+
+/** Helper to define tasks with plannable action and instances. */
+fun Task.Companion.create(action: PlannableAction, vararg instances: Instance): Task =
+    create(action.pddl.name, *instances.map(Instance::name).toTypedArray())

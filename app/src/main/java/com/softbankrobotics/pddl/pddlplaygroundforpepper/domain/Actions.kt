@@ -3,7 +3,6 @@ package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.QiChatbot
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.PlannableAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.GreetAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.PlaceholderAction
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.StartEngageAction

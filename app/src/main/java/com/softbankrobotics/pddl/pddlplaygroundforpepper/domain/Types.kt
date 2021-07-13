@@ -87,3 +87,22 @@ fun randomNumberString(n: Int): String {
     val id = Random().nextInt(max.toInt())
     return id.toString().padStart(n, '0')
 }
+
+/**
+ * Checks whether the given type is a sub-type of another type.
+ */
+fun isTypeCompatible(typeToCheck: Type?, against: Type?): Boolean {
+    return if (against == null) {
+        return true
+    } else {
+        if (typeToCheck == null) {
+            false
+        } else {
+            if (typeToCheck == against) {
+                true
+            } else {
+                isTypeCompatible(typeToCheck.parent, against)
+            }
+        }
+    }
+}

@@ -12,7 +12,9 @@ import com.aldebaran.qi.sdk.design.activity.conversationstatus.SpeechBarDisplayS
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.RetryCountdownBinding
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.ViewLoadingBinding
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.humansAreGreeted
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.engageableHumansAreGreeted
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.engageableHumansAreHappy
+import com.softbankrobotics.pddlplanning.and
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -184,7 +186,12 @@ class MainActivity : RobotActivity(), RobotLifecycleCallbacks {
             try {
                 Timber.d("Setting up controller")
                 ensureController(qiContext).apply {
-                    setGoal(humansAreGreeted.goal)
+                    setGoal(
+                        and(
+                            engageableHumansAreGreeted.goal,
+                            engageableHumansAreHappy.goal
+                        )
+                    )
                     Timber.d("Starting controller")
                     start()
                 }

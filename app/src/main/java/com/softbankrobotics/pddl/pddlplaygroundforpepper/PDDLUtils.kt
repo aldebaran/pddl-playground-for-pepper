@@ -250,5 +250,5 @@ fun effectToFactDelta(action: Action, args: Array<out Instance>): SetDelta<Fact>
 /**
  * Evaluate an expression given a state.
  */
-fun evaluateExpression(expression: Expression, state: WorldState): Boolean =
-    evaluateExpression(expression, state.objects, state.facts)
+fun evaluateExpression(expression: Expression, state: WorldState, log: LogFunction? = null): Boolean =
+    evaluateExpression(expression, state.objects, state.facts, log)

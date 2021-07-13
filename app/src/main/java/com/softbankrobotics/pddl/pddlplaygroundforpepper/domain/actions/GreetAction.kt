@@ -24,14 +24,14 @@ object GreetAction : ActionDeclaration() {
         Action(
             name,
             listOf(h),
-            and(engages(self, h)),
+            engages(self, h),
             was_greeted(h)
         )
     }
 
     override val createProposal: ((Locale) -> String)? = null
     override val createLabel: ((Context) -> String)? = null
-    override val chatState = ChatState.RUNNING
+    override val chatState = ChatState.RUNNING // Because this actions uses topics.
     override val createTopics: suspend (QiContext, Context) -> List<Topic> =
         { qiContext, context -> createTopicsFromResources(context, qiContext, R.raw.greet) }
 

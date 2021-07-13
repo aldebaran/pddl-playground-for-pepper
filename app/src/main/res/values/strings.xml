@@ -6,4 +6,5 @@
     <string name="retry_in_x_s">Retrying in %.1f s…</string>
     <string name="remote_error">Remote service error (missing planner service?)</string>
     <string name="focus_refused">I am not ready yet</string>
+    <string name="lmao">lmao</string>
 </resources>

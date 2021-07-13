@@ -1,11 +1,9 @@
 package com.softbankrobotics.pddl.pddlplaygroundforpepper.problem
 
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.Human
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.feels
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.happy
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.was_greeted
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
 import com.softbankrobotics.pddlplanning.Goal
 import com.softbankrobotics.pddlplanning.forall
+import com.softbankrobotics.pddlplanning.imply
 import com.softbankrobotics.pddlplanning.utils.Named
 import com.softbankrobotics.pddlplanning.utils.indexOf
 
@@ -18,20 +16,20 @@ class NamedGoal(override val name: String, val goal: Goal) : Named
  */
 private val h = Human("?h")
 
-val humansAreGreeted = NamedGoal(
-    "Humans are greeted",
-    forall(h, was_greeted(h))
+val engageableHumansAreGreeted = NamedGoal(
+    "Engageable humans are greeted",
+    forall(h, imply(can_be_engaged(h), was_greeted(h)))
 )
 
-val humansAreHappy = NamedGoal(
-    "Make humans happy",
-    forall(h, feels(h, happy))
+val engageableHumansAreHappy = NamedGoal(
+    "Engageable humans are happy",
+    forall(h, imply(can_be_engaged(h), feels(h, happy)))
 )
 
 /**
  * The index of all declared goals.
  */
 val goalsIndex = indexOf(
-    humansAreGreeted,
-    humansAreHappy
+    engageableHumansAreGreeted,
+    engageableHumansAreHappy
 )

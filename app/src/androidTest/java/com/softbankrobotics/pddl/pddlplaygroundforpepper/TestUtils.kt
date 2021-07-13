@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.Intent
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Observable
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.ActionDeclaration
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.isTypeCompatible
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldChange
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldState
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
 import com.softbankrobotics.pddlplanning.*
 import com.softbankrobotics.pddlplanning.utils.Index
 import com.softbankrobotics.pddlplanning.utils.createDomain
@@ -142,4 +144,58 @@ fun <T> Observable<T>.waitForValueAsync(value: T): Deferred<T> {
  */
 suspend fun <T> Deferred<T>.await(durationMs: Long): T {
     return withTimeout(durationMs) { await() }
+}
+
+/**
+ * Short for deducing the world state after the given task is performed.
+ * @throws AssertionError if the precondition of the action is not met.
+ */
+fun WorldState.after(
+    actionDeclaration: ActionDeclaration,
+    vararg args: Instance,
+    log: LogFunction? = null
+): WorldState {
+    val effect = checkPreconditionAndComputeEffect(this, actionDeclaration, args, log)
+    return updated(effect)
+}
+
+private fun checkPreconditionAndComputeEffect(
+    state: WorldState,
+    actionDeclaration: ActionDeclaration,
+    args: Array<out Instance>,
+    log: LogFunction? = null
+): WorldChange {
+    val actionName = actionDeclaration.name
+
+    // Check args
+    val parameters = actionDeclaration.pddl.parameters
+    if (parameters.size != args.size)
+        throw RuntimeException("Wrong parameter arity for $actionName (expected ${parameters.size}, got ${args.size})")
+    val parametersToValue = parameters.zip(args)
+    parametersToValue.forEachIndexed { index, (key, value) ->
+        if (!isTypeCompatible(value.type, key.type))
+            throw RuntimeException("Incompatible type of value (${value.declaration()}) to specify parameter #$index (${key.declaration()})")
+    }
+
+    // Check precondition
+    val precondition =
+        applyParameters(actionDeclaration.pddl.precondition, parametersToValue.toMap())
+    log?.let { it("Checking precondition of $actionName in world:\n$state") }
+    val preconditionFulfilled =
+        precondition.isEmpty() || evaluateExpression(precondition, state, log)
+    if (!preconditionFulfilled)
+        throw RuntimeException("Precondition of $actionName is not fulfilled in the world")
+
+    // Check effect
+    log?.let { it("Checking constants of $actionName in ${actionDeclaration.pddl.effect}...") }
+    val newConstants = extractObjects(actionDeclaration.pddl.effect)
+        .filter { !it.name.startsWith('?') }
+        .filter { !state.objects.contains(it) }
+    val addingNewConstants = WorldChange.ofAddedObjects(*newConstants.toTypedArray())
+
+    // Compute effect
+    val effect = effectToWorldChange(actionDeclaration.pddl, args)
+    val effectWithConstants = addingNewConstants.mergedWith(effect)
+    log?.let { it("Forecast effect of $actionName:\n$effectWithConstants") }
+    return effectWithConstants
 }

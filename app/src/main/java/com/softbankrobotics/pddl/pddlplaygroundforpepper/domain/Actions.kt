@@ -3,10 +3,7 @@ package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.QiChatbot
 import com.aldebaran.qi.sdk.`object`.conversation.Topic
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.GreetAction
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.PlaceholderAction
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.StartEngageAction
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.StopEngageAction
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.actions.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.MutableWorld
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.WorldData
 import com.softbankrobotics.pddlplanning.utils.indexOf
@@ -17,6 +14,7 @@ import timber.log.Timber
  */
 val actionsIndex = indexOf(
     GreetAction,
+    JokeWithAction,
     StartEngageAction,
     StopEngageAction
 )
@@ -44,6 +42,7 @@ fun createActionFactory(
             localChatbotProvider,
             localTopicsProvider
         )
+        is JokeWithAction -> actionDeclaration.createActionFactory(qiContext)
 
         // Durative actions.
         is StartEngageAction -> actionDeclaration.createActionFactory(qiContext, world, data)

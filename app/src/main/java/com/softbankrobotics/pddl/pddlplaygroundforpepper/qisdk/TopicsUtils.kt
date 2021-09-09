@@ -7,7 +7,6 @@ import com.aldebaran.qi.sdk.QiContext
 import com.aldebaran.qi.sdk.`object`.conversation.*
 import com.aldebaran.qi.sdk.builder.TopicBuilder
 import com.aldebaran.qi.sdk.util.IOUtils
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking

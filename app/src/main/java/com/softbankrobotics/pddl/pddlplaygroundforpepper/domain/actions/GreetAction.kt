@@ -8,12 +8,8 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.addTo
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.effectToWorldChange
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.createTopicsFromResources
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.enableTopicsSuspend
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.goToStartBookmark
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.waitForFinishedBookmark
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.*
 import com.softbankrobotics.pddlplanning.Action
-import com.softbankrobotics.pddlplanning.and
 import java.util.*
 
 object GreetAction : ActionDeclaration() {

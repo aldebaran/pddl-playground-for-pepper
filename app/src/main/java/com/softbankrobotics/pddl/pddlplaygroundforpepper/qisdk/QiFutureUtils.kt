@@ -1,4 +1,4 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk
 
 import android.os.Handler
 import android.os.Looper

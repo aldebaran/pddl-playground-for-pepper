@@ -7,7 +7,7 @@ import com.aldebaran.qi.sdk.BuildConfig
 import com.aldebaran.qi.sdk.`object`.actuation.Frame
 import com.aldebaran.qi.sdk.`object`.human.EngagementIntentionState
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.applyParameters
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.*

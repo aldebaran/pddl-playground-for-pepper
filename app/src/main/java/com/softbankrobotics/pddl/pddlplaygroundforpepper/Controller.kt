@@ -11,6 +11,8 @@ import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.Placeholder
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.*
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.problem.extractors.HumanExtractor
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.await
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.cancelAndJoin
 import com.softbankrobotics.pddlplanning.*
 import com.softbankrobotics.pddlplanning.utils.Index
 import com.softbankrobotics.pddlplanning.utils.toIndex

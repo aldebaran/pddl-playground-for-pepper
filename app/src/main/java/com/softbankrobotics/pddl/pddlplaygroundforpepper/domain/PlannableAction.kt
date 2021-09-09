@@ -2,7 +2,7 @@ package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 
 import android.view.View
 import com.aldebaran.qi.Future
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.DisposablesSuspend
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Observable
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.Signal

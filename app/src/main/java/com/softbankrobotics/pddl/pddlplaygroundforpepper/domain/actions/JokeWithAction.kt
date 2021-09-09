@@ -6,7 +6,7 @@ import com.aldebaran.qi.sdk.`object`.conversation.Topic
 import com.aldebaran.qi.sdk.builder.SayBuilder
 import com.aldebaran.qi.sdk.util.IOUtils
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.R
-import com.softbankrobotics.pddl.pddlplaygroundforpepper.await
+import com.softbankrobotics.pddl.pddlplaygroundforpepper.qisdk.await
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.common.createView
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.databinding.JokeWithActionBinding
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.domain.*

@@ -1,4 +1,4 @@
-package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain;
+package com.softbankrobotics.pddl.pddlplaygroundforpepper.domain
 
 import com.softbankrobotics.pddl.pddlplaygroundforpepper.Domain
 

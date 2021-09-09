@@ -6,6 +6,8 @@ It uses the [PDDL Planning library](https://github.com/aldebaran/pddl-planning-a
 a planner (such as [Fast Downward for Android](https://github.com/aldebaran/fast-downward-android))
 to produce robotic behaviors on Pepper.
 
+## Theory
+
 Whenever the state changes, the planner is run and a plan is made, containing a sequence of actions.
 These actions are implemented using Qi SDK actions,
 so that they interface with the robot actuators,
@@ -28,3 +30,16 @@ Developing this behavior required us to:
 
 You should be able to run this app out of the box, and get Pepper to greet you and joke with you.
 You can tweak goals in the code by calling `Controller.setGoal`.
+
+## Getting Started
+
+This is an Android Studio project.
+It should build out of the box.
+If it requires a fix to do so, please contribute back.
+
+To run it, you will have to provide a `PlanSearchFunction`.
+By default, it is configured to use another Android service,
+[Fast Downward for Android](https://github.com/aldebaran/fast-downward-android).
+You can install it on Pepper's tablet before running this application.
+
+When running and in the foreground, Pepper should engage with you and tell you a random joke.
